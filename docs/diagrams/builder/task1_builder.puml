@@ -1,0 +1,93 @@
+@startuml task1_builder
+title Завдання 1. Кінотеатр «Кадр»: замовлення глядача (Builder)
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class Main <<Client>> {
+  + {static} main(args: String[]): void
+  ~ {static} task1Builder(): void
+}
+
+class OrderDirector <<Director>> {
+  - {static} SRC: String
+  + buildComboForTwo(builder: OrderBuilder, screening: Screening, seatA: String, seatB: String): Order
+  + buildFamilyEvening(builder: OrderBuilder, screening: Screening, seats: String...): Order
+}
+
+interface OrderBuilder <<Builder>> {
+  + forScreening(screening: Screening): OrderBuilder
+  + addSeat(seat: String): OrderBuilder
+  + withPopcorn(portions: int): OrderBuilder
+  + addDrink(drink: String): OrderBuilder
+  + with3DGlasses(): OrderBuilder
+  + withPromoCode(code: String): OrderBuilder
+  + withVip(): OrderBuilder
+  + build(): Order
+}
+
+class StandardOrderBuilder <<ConcreteBuilder>> {
+  - {static} SRC: String
+  - screening: Screening
+  - seats: List<String>
+  - popcornPortions: int
+  - drinks: List<String>
+  - glasses3D: boolean
+  - promoCode: String
+  - vip: boolean
+  + build(): Order
+  - fail(reason: String): void
+}
+
+class Order <<Product>> {
+  - screening: Screening
+  - seats: List<String>
+  - popcornPortions: int
+  - drinks: List<String>
+  - glasses3D: boolean
+  - promoCode: String
+  - vip: boolean
+  ~ Order(screening, seats, popcornPortions, drinks, glasses3D, promoCode, vip)
+  + totalPrice(): double
+  + describe(): String
+}
+
+class Screening <<Domain>> {
+  - film: String
+  - hall: int
+  - start: LocalDateTime
+}
+
+class Logger <<Utility>> {
+  + {static} log(source: String, event: String): void
+}
+
+note right of StandardOrderBuilder
+  build() перевіряє обов'язкові частини:
+  сеанс і хоча б одне місце.
+  Якщо їх немає, пише в журнал
+  «Неможливо сформувати замовлення: ...»
+  і кидає IllegalStateException,
+  тож неповне замовлення не створюється.
+end note
+
+note bottom of Order
+  Незмінний: поля final, списки лише для читання,
+  сеттерів немає, конструктор пакетний
+  (створює лише білдер).
+end note
+
+note left of OrderDirector
+  Типові замовлення («Комбо на двох»,
+  «Сімейний вечір») задані послідовністю
+  кроків в одному місці.
+end note
+
+Main ..> OrderDirector : «use»
+Main ..> StandardOrderBuilder : «create»
+OrderDirector ..> OrderBuilder : «use»
+OrderBuilder <|.. StandardOrderBuilder
+StandardOrderBuilder ..> Order : «create» у build()
+StandardOrderBuilder --> "0..1" Screening
+StandardOrderBuilder ..> Logger : «use»
+Order --> "1" Screening
+@enduml
