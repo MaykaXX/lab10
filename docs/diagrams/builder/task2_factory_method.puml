@@ -1,0 +1,48 @@
+@startuml
+title Завдання 2. Квитки для каналів продажу (Factory Method)
+skinparam classAttributeIconSize 0
+
+interface Ticket <<Product>> {
+  +render(): String
+}
+class PaperTicket <<ConcreteProduct>>
+class PdfQrTicket <<ConcreteProduct>>
+class WalletTicket <<ConcreteProduct>>
+class TerminalTicket <<ConcreteProduct, новий>>
+
+abstract class SalesChannel <<Creator>> {
+  #channelName(): String {abstract}
+  #createTicket(screening, seat): Ticket {abstract}
+  +sell(screening, seat): Ticket {final}
+  -reserveSeat()
+  -acceptPayment()
+}
+class BoxOfficeChannel <<ConcreteCreator>>
+class WebsiteChannel <<ConcreteCreator>>
+class AppChannel <<ConcreteCreator>>
+class SelfServiceTerminalChannel <<ConcreteCreator, новий>>
+
+class SalesLedger {
+  +records(): List<String>
+  +total(): int
+}
+class Screening
+
+Ticket <|.. PaperTicket
+Ticket <|.. PdfQrTicket
+Ticket <|.. WalletTicket
+Ticket <|.. TerminalTicket
+
+SalesChannel <|-- BoxOfficeChannel
+SalesChannel <|-- WebsiteChannel
+SalesChannel <|-- AppChannel
+SalesChannel <|-- SelfServiceTerminalChannel
+
+SalesChannel ..> Ticket : створює (фабричний метод)
+SalesChannel --> SalesLedger : записує продаж
+BoxOfficeChannel ..> PaperTicket : <<create>>
+WebsiteChannel ..> PdfQrTicket : <<create>>
+AppChannel ..> WalletTicket : <<create>>
+SelfServiceTerminalChannel ..> TerminalTicket : <<create>>
+PaperTicket --> Screening
+@enduml
