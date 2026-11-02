@@ -1,0 +1,70 @@
+@startuml
+title Завдання 3. Налаштування залу під формат показу (Abstract Factory)
+skinparam classAttributeIconSize 0
+
+interface FilmCopy <<AbstractProduct A>> {
+  +format(): String
+  +describe(): String
+}
+interface ProjectorProfile <<AbstractProduct B>> {
+  +format(): String
+  +describe(): String
+}
+interface SoundProfile <<AbstractProduct C>> {
+  +format(): String
+  +describe(): String
+}
+
+interface HallEquipmentFactory <<AbstractFactory>> {
+  +formatName(): String
+  +createFilmCopy(screening): FilmCopy
+  +createProjectorProfile(): ProjectorProfile
+  +createSoundProfile(): SoundProfile
+}
+
+class Format2DFactory <<ConcreteFactory>>
+class Format3DFactory <<ConcreteFactory>>
+class DolbyAtmosFactory <<ConcreteFactory>>
+class ImaxFactory <<ConcreteFactory, новий>>
+
+class "Copy2D / Projector2D / Sound2D" as P2D
+class "Copy3D / Projector3D / Sound3D" as P3D
+class "CopyAtmos / ProjectorAtmos / SoundAtmos" as PAT
+class "ImaxCopy / ImaxProjector / ImaxSound" as PIM
+
+class ScreeningLauncher <<Client>> {
+  +launch(screening, factory)
+}
+
+HallEquipmentFactory <|.. Format2DFactory
+HallEquipmentFactory <|.. Format3DFactory
+HallEquipmentFactory <|.. DolbyAtmosFactory
+HallEquipmentFactory <|.. ImaxFactory
+
+HallEquipmentFactory ..> FilmCopy
+HallEquipmentFactory ..> ProjectorProfile
+HallEquipmentFactory ..> SoundProfile
+
+FilmCopy <|.. P2D
+ProjectorProfile <|.. P2D
+SoundProfile <|.. P2D
+FilmCopy <|.. P3D
+ProjectorProfile <|.. P3D
+SoundProfile <|.. P3D
+FilmCopy <|.. PAT
+ProjectorProfile <|.. PAT
+SoundProfile <|.. PAT
+FilmCopy <|.. PIM
+ProjectorProfile <|.. PIM
+SoundProfile <|.. PIM
+
+Format2DFactory ..> P2D : <<create>>
+Format3DFactory ..> P3D : <<create>>
+DolbyAtmosFactory ..> PAT : <<create>>
+ImaxFactory ..> PIM : <<create>>
+
+ScreeningLauncher --> HallEquipmentFactory
+ScreeningLauncher ..> FilmCopy
+ScreeningLauncher ..> ProjectorProfile
+ScreeningLauncher ..> SoundProfile
+@enduml
