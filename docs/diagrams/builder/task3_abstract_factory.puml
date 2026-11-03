@@ -1,70 +1,138 @@
-@startuml
+@startuml task3_abstract_factory
 title Завдання 3. Налаштування залу під формат показу (Abstract Factory)
 skinparam classAttributeIconSize 0
+skinparam nodesep 12
+skinparam ranksep 55
+
+class Main <<Client>> {
+  ~ {static} task3AbstractFactory() : void
+}
+
+class SessionLauncher <<Client>> {
+  - {static} SRC : String
+  + launch(hall : int, film : String,\n factory : HallEquipmentFactory) : void
+}
+
+class Logger <<Utility>> {
+  + {static} log(source : String, event : String) : void
+}
 
 interface FilmCopy <<AbstractProduct A>> {
-  +format(): String
-  +describe(): String
+  + getFormat() : String
+  + describe() : String
 }
 interface ProjectorProfile <<AbstractProduct B>> {
-  +format(): String
-  +describe(): String
+  + getFormat() : String
+  + describe() : String
 }
 interface SoundProfile <<AbstractProduct C>> {
-  +format(): String
-  +describe(): String
+  + getFormat() : String
+  + describe() : String
 }
+
+class Copy2D <<ConcreteProduct A>> {
+  - film : String
+  + Copy2D(film : String)
+}
+class Projector2D <<ConcreteProduct B>>
+class Sound2D <<ConcreteProduct C>>
+
+class Copy3D <<ConcreteProduct A>> {
+  - film : String
+  + Copy3D(film : String)
+}
+class Projector3D <<ConcreteProduct B>>
+class Sound3D <<ConcreteProduct C>>
+
+class CopyAtmos <<ConcreteProduct A>> {
+  - film : String
+  + CopyAtmos(film : String)
+}
+class ProjectorAtmos <<ConcreteProduct B>>
+class SoundAtmos <<ConcreteProduct C>>
+
+class CopyImax <<ConcreteProduct A>> {
+  - film : String
+  + CopyImax(film : String)
+}
+class ProjectorImax <<ConcreteProduct B>>
+class SoundImax <<ConcreteProduct C>>
+
+class Hall2DFactory <<ConcreteFactory>>
+class Hall3DFactory <<ConcreteFactory>>
+class HallAtmosFactory <<ConcreteFactory>>
+class HallImaxFactory <<ConcreteFactory>>
 
 interface HallEquipmentFactory <<AbstractFactory>> {
-  +formatName(): String
-  +createFilmCopy(screening): FilmCopy
-  +createProjectorProfile(): ProjectorProfile
-  +createSoundProfile(): SoundProfile
+  + getFormat() : String
+  + createFilmCopy(film : String) : FilmCopy
+  + createProjectorProfile() : ProjectorProfile
+  + createSoundProfile() : SoundProfile
 }
 
-class Format2DFactory <<ConcreteFactory>>
-class Format3DFactory <<ConcreteFactory>>
-class DolbyAtmosFactory <<ConcreteFactory>>
-class ImaxFactory <<ConcreteFactory, новий>>
+note right of SessionLauncher
+  Працює лише з інтерфейсами,
+  конкретних класів не знає.
+  Новий формат (IMAX) додається
+  новою фабрикою, без змін тут.
+end note
 
-class "Copy2D / Projector2D / Sound2D" as P2D
-class "Copy3D / Projector3D / Sound3D" as P3D
-class "CopyAtmos / ProjectorAtmos / SoundAtmos" as PAT
-class "ImaxCopy / ImaxProjector / ImaxSound" as PIM
+note right of HallImaxFactory
+  Формат додано пізніше,
+  SessionLauncher не змінювався.
+end note
 
-class ScreeningLauncher <<Client>> {
-  +launch(screening, factory)
-}
+note right of Main
+  Main створює конкретні фабрики
+  і передає їх у launch().
+end note
 
-HallEquipmentFactory <|.. Format2DFactory
-HallEquipmentFactory <|.. Format3DFactory
-HallEquipmentFactory <|.. DolbyAtmosFactory
-HallEquipmentFactory <|.. ImaxFactory
+' --- рівні ---
+Main -[hidden]down-> SessionLauncher
+SessionLauncher -[hidden]right-> Logger
+FilmCopy -[hidden]right- ProjectorProfile
+ProjectorProfile -[hidden]right- SoundProfile
+SessionLauncher -[hidden]down-> ProjectorProfile
 
-HallEquipmentFactory ..> FilmCopy
-HallEquipmentFactory ..> ProjectorProfile
-HallEquipmentFactory ..> SoundProfile
+' --- клієнт ---
+Main ..> SessionLauncher : launch()
+SessionLauncher ..> FilmCopy : <<use>>
+SessionLauncher ..> ProjectorProfile : <<use>>
+SessionLauncher ..> SoundProfile : <<use>>
+SessionLauncher ..> Logger : <<use>>
 
-FilmCopy <|.. P2D
-ProjectorProfile <|.. P2D
-SoundProfile <|.. P2D
-FilmCopy <|.. P3D
-ProjectorProfile <|.. P3D
-SoundProfile <|.. P3D
-FilmCopy <|.. PAT
-ProjectorProfile <|.. PAT
-SoundProfile <|.. PAT
-FilmCopy <|.. PIM
-ProjectorProfile <|.. PIM
-SoundProfile <|.. PIM
+' --- реалізація продуктів ---
+FilmCopy <|.. Copy2D
+FilmCopy <|.. Copy3D
+FilmCopy <|.. CopyAtmos
+FilmCopy <|.. CopyImax
+ProjectorProfile <|.. Projector2D
+ProjectorProfile <|.. Projector3D
+ProjectorProfile <|.. ProjectorAtmos
+ProjectorProfile <|.. ProjectorImax
+SoundProfile <|.. Sound2D
+SoundProfile <|.. Sound3D
+SoundProfile <|.. SoundAtmos
+SoundProfile <|.. SoundImax
 
-Format2DFactory ..> P2D : <<create>>
-Format3DFactory ..> P3D : <<create>>
-DolbyAtmosFactory ..> PAT : <<create>>
-ImaxFactory ..> PIM : <<create>>
+' --- фабрики створюють продукти свого формату ---
+Copy2D <.. Hall2DFactory : <<create>>
+Projector2D <.. Hall2DFactory : <<create>>
+Sound2D <.. Hall2DFactory : <<create>>
+Copy3D <.. Hall3DFactory : <<create>>
+Projector3D <.. Hall3DFactory : <<create>>
+Sound3D <.. Hall3DFactory : <<create>>
+CopyAtmos <.. HallAtmosFactory : <<create>>
+ProjectorAtmos <.. HallAtmosFactory : <<create>>
+SoundAtmos <.. HallAtmosFactory : <<create>>
+CopyImax <.. HallImaxFactory : <<create>>
+ProjectorImax <.. HallImaxFactory : <<create>>
+SoundImax <.. HallImaxFactory : <<create>>
 
-ScreeningLauncher --> HallEquipmentFactory
-ScreeningLauncher ..> FilmCopy
-ScreeningLauncher ..> ProjectorProfile
-ScreeningLauncher ..> SoundProfile
+' --- реалізація фабрики ---
+Hall2DFactory ..|> HallEquipmentFactory
+Hall3DFactory ..|> HallEquipmentFactory
+HallAtmosFactory ..|> HallEquipmentFactory
+HallImaxFactory ..|> HallEquipmentFactory
+SessionLauncher ..> HallEquipmentFactory : <<use>>
 @enduml
