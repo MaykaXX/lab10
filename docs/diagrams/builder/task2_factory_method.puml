@@ -1,48 +1,123 @@
-@startuml
-title Завдання 2. Квитки для каналів продажу (Factory Method)
+@startuml task2_factory_method
+title Завдання 2. Квитки для різних каналів продажу (Factory Method)
 skinparam classAttributeIconSize 0
 
-interface Ticket <<Product>> {
-  +render(): String
-}
-class PaperTicket <<ConcreteProduct>>
-class PdfQrTicket <<ConcreteProduct>>
-class WalletTicket <<ConcreteProduct>>
-class TerminalTicket <<ConcreteProduct, новий>>
-
 abstract class SalesChannel <<Creator>> {
-  #channelName(): String {abstract}
-  #createTicket(screening, seat): Ticket {abstract}
-  +sell(screening, seat): Ticket {final}
-  -reserveSeat()
-  -acceptPayment()
+  - soldCount : int
+  + sell(screening : Screening, seat : String, price : int) : Ticket
+  + {abstract} getName() : String
+  # {abstract} createTicket(screening : Screening, seat : String,\n price : int) : Ticket
+  + getSoldCount() : int
+  - reserveSeat(seat : String) : void
+  - acceptPayment(price : int) : void
+  - recordSale(seat : String) : void
 }
-class BoxOfficeChannel <<ConcreteCreator>>
-class WebsiteChannel <<ConcreteCreator>>
-class AppChannel <<ConcreteCreator>>
-class SelfServiceTerminalChannel <<ConcreteCreator, новий>>
 
-class SalesLedger {
-  +records(): List<String>
-  +total(): int
+class CashierChannel <<ConcreteCreator>> {
+  + getName() : String
+  # createTicket(screening : Screening, seat : String,\n price : int) : Ticket
 }
-class Screening
+class WebsiteChannel <<ConcreteCreator>> {
+  + getName() : String
+  # createTicket(screening : Screening, seat : String,\n price : int) : Ticket
+}
+class AppChannel <<ConcreteCreator>> {
+  + getName() : String
+  # createTicket(screening : Screening, seat : String,\n price : int) : Ticket
+}
+class SelfServiceChannel <<ConcreteCreator>> {
+  + getName() : String
+  # createTicket(screening : Screening, seat : String,\n price : int) : Ticket
+}
+
+interface Ticket <<Product>> {
+  + describe() : String
+}
+
+class PaperTicket <<ConcreteProduct>> {
+  - screening : Screening
+  - seat : String
+  - price : int
+  + PaperTicket(screening : Screening, seat : String, price : int)
+  + describe() : String
+}
+class PdfTicket <<ConcreteProduct>> {
+  - screening : Screening
+  - seat : String
+  - price : int
+  - qrCode : String
+  + PdfTicket(screening : Screening, seat : String, price : int)
+  + describe() : String
+}
+class WalletTicket <<ConcreteProduct>> {
+  - screening : Screening
+  - seat : String
+  - price : int
+  + WalletTicket(screening : Screening, seat : String, price : int)
+  + describe() : String
+}
+class TerminalTicket <<ConcreteProduct>> {
+  - screening : Screening
+  - seat : String
+  - price : int
+  + TerminalTicket(screening : Screening, seat : String, price : int)
+  + describe() : String
+}
+
+class Screening <<Value object>> {
+  - film : String
+  - hall : int
+  - start : LocalDateTime
+  + toString() : String
+}
+
+class Logger <<Utility>> {
+  + {static} log(source : String, event : String) : void
+}
+
+class Main <<Client>> {
+  ~ {static} task2FactoryMethod() : void
+}
+
+note right of SalesChannel
+  Процес продажу описано один раз у sell():
+  резервування → оплата → createTicket() →
+  видача → запис продажу.
+  Розгалужень за каналом немає.
+end note
+
+note bottom of SelfServiceChannel
+  Підключено новими класами
+  (SelfServiceChannel, TerminalTicket).
+  SalesChannel не змінювався.
+end note
+
+SalesChannel <|-- CashierChannel
+SalesChannel <|-- WebsiteChannel
+SalesChannel <|-- AppChannel
+SalesChannel <|-- SelfServiceChannel
 
 Ticket <|.. PaperTicket
-Ticket <|.. PdfQrTicket
+Ticket <|.. PdfTicket
 Ticket <|.. WalletTicket
 Ticket <|.. TerminalTicket
 
-SalesChannel <|-- BoxOfficeChannel
-SalesChannel <|-- WebsiteChannel
-SalesChannel <|-- AppChannel
-SalesChannel <|-- SelfServiceTerminalChannel
-
-SalesChannel ..> Ticket : створює (фабричний метод)
-SalesChannel --> SalesLedger : записує продаж
-BoxOfficeChannel ..> PaperTicket : <<create>>
-WebsiteChannel ..> PdfQrTicket : <<create>>
+SalesChannel ..> Ticket : <<use>>\ncreateTicket()
+CashierChannel ..> PaperTicket : <<create>>
+WebsiteChannel ..> PdfTicket : <<create>>
 AppChannel ..> WalletTicket : <<create>>
-SelfServiceTerminalChannel ..> TerminalTicket : <<create>>
-PaperTicket --> Screening
+SelfServiceChannel ..> TerminalTicket : <<create>>
+
+SalesChannel ..> Screening : <<use>>
+SalesChannel ..> Logger : <<use>>
+PaperTicket --> "1" Screening
+PdfTicket --> "1" Screening
+WalletTicket --> "1" Screening
+TerminalTicket --> "1" Screening
+
+Main ..> SalesChannel : sell()
+Main ..> CashierChannel
+Main ..> WebsiteChannel
+Main ..> AppChannel
+Main ..> SelfServiceChannel
 @enduml
